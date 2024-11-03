@@ -82,6 +82,8 @@ class OHEditor:
         """
         Implement the str_replace command, which replaces old_str with new_str in the file content.
         """
+        self._populate_file_history_if_having_content_before_edit(path)
+
         file_content = self.read_file(path)
         old_str = old_str.expandtabs()
         new_str = new_str.expandtabs() if new_str is not None else ''
@@ -202,6 +204,8 @@ class OHEditor:
         """
         Implement the insert command, which inserts new_str at the specified line in the file content.
         """
+        self._populate_file_history_if_having_content_before_edit(path)
+
         try:
             file_text = self.read_file(path)
         except Exception as e:
@@ -280,14 +284,25 @@ class OHEditor:
                 f'The path {path} is a directory and only the `view` command can be used on directories.',
             )
 
+    def _populate_file_history_if_having_content_before_edit(self, path: Path) -> None:
+        """
+        Populate the file history with the current file content.
+        """
+        # Check if the file exists or history is not empty
+        if len(self._file_history[path]) > 0 or not path.exists():
+            return
+
+        self._file_history[path].append(self.read_file(path))
+
     def undo_edit(self, path: Path) -> CLIResult:
         """
         Implement the undo_edit command.
         """
-        if not self._file_history[path]:
+        if not self._file_history[path] or len(self._file_history[path]) <= 1:
             raise ToolError(f'No edit history found for {path}.')
 
-        old_text = self._file_history[path].pop()
+        self._file_history[path].pop()
+        old_text = self._file_history[path][-1]
         self.write_file(path, old_text)
 
         return CLIResult(
