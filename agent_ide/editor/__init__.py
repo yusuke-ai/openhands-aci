@@ -5,22 +5,13 @@ from .results import ToolResult
 _GLOBAL_EDITOR = OHEditor()
 
 
-def _make_api_tool_result(
-    tool_result: ToolResult,
-) -> str:
+def _make_api_tool_result(tool_result: ToolResult) -> str:
     """Convert an agent ToolResult to an API ToolResultBlockParam."""
-    tool_result_content: str = ''
-    is_error = False
     if tool_result.error:
-        is_error = True
-        tool_result_content = tool_result.error
-    else:
-        assert tool_result.output, 'Expecting output in file_editor.'
-        tool_result_content = tool_result.output
-    if is_error:
-        return f'ERROR:\n{tool_result_content}'
-    else:
-        return tool_result_content
+        return f'ERROR:\n{tool_result.error}'
+
+    assert tool_result.output, 'Expected output in file_editor.'
+    return tool_result.output
 
 
 def file_editor(
